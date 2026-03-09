@@ -40,6 +40,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        // ★ファン専用のガードを追加
+        'fan' => [
+            'driver' => 'session',
+            'provider' => 'fans',
+        ],
     ],
 
     /*
@@ -62,13 +67,13 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\User::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        // ★ファン専用のプロバイダーを追加
+        'fans' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Fan::class,
+        ],
     ],
 
     /*
