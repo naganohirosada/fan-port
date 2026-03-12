@@ -23,7 +23,7 @@ export default function Welcome({ products, ranking, countryStats, countries }) 
             return;
         }
 
-        router.post(route('products.want', product.id), {}, {
+        router.post(route('fans.products.want', product.id), {}, {
             preserveScroll: true,
             onSuccess: () => {
                 if (!product.is_wanted) {
@@ -44,7 +44,7 @@ export default function Welcome({ products, ranking, countryStats, countries }) 
     };
 
     return (
-        <FrontLayout>
+        <FrontLayout user={auth.fan}>
             <Head title="Global Otaku Showcase" />
 
             {/* ヒーローセクション */}

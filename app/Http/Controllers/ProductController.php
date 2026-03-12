@@ -67,6 +67,37 @@ class ProductController extends Controller
      */
     public function show($slug)
     {
+        $fan = auth()->guard('fan')->user();
+        $addresses = [];
+        $paymentMethods = [];
+
+        if ($fan) {
+            // 1. 住所一覧
+            $addresses = $fan->addresses()->with(['country', 'region'])->get();
+
+            // 2. 決済手段を一つのリストにまとめる
+            // クレジットカード
+            $fan->creditCards->each(function($card) use (&$paymentMethods) {
+                $paymentMethods[] = [
+                    'id' => $card->id,
+                    'table' => 'fan_credit_cards',
+                    'label' => "💳 {$card->brand} **** {$card->last4}",
+                    'is_default' => $card->is_default
+                ];
+            });
+
+            // PayPal
+            $fan->paypalAccounts->each(function($paypal) use (&$paymentMethods) {
+                $paymentMethods[] = [
+                    'id' => $paypal->id,
+                    'table' => 'fan_paypal_accounts',
+                    'label' => "🅿️ PayPal ({$paypal->paypal_email})",
+                    'is_default' => $paypal->is_default
+                ];
+            });
+            
+            // 必要に応じて BNPL や Digital Wallet も同様に追加
+        }
         $product = Product::where('slug', $slug)
             ->with(['images', 'translations' => function($q) {
                 $q->where('locale', 'ja');
@@ -87,9 +118,13 @@ class ProductController extends Controller
             ->groupBy('fans.country_code')
             ->orderBy('count', 'desc')
             ->get();
+        $groupOrders = $product->groupOrders()->where('status', 'active')->get();
 
         return Inertia::render('Products/Show', [
             'product' => $product,
+            'groupOrders' => $groupOrders,
+            'addresses' => $addresses,
+            'paymentMethods' => $paymentMethods,
             'wantsByCountry' => $wantsByCountry,
             'countries' => config('countries.list'),
         ]);

@@ -15,6 +15,7 @@ class WelcomeController extends Controller
     {
         // 1. ログイン中のファン情報を取得
         $fanId = Auth::guard('fan')->id();
+        $users = Auth::guard('fan')->user();
 
         // 2. 商品一覧とWant情報を取得
         $products = Product::with(['images', 'translations' => function($q) {
@@ -66,6 +67,7 @@ class WelcomeController extends Controller
             'ranking' => $ranking,
             'countryStats' => $countryStats,
             'countries' => config('countries.list'),
+            'user' => $users,
         ]);
     }
 }

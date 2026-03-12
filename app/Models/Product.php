@@ -9,7 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Translation;
 use App\Models\ProductImage;
 use App\Models\Reservation;
+use App\Models\Fan;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\User;
+use App\Models\GroupOrder;
+use App\Models\Category;
 
 class Product extends Model
 {
@@ -60,5 +64,21 @@ class Product extends Model
     {
         // Postは多くのFanからWant!される
         return $this->belongsToMany(Fan::class, 'wants');
+    }
+
+    /**
+     * この商品に紐づく全てのグループオーダーを取得
+     */
+    public function groupOrders(): HasMany
+    {
+        return $this->hasMany(GroupOrder::class);
+    }
+
+    /**
+     * 商品のカテゴリーを取得
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 }

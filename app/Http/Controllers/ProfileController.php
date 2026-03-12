@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Country;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
@@ -29,15 +31,37 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $fan = auth()->guard('fan')->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:fans,email,' . $fan->id,
+            'country_code' => 'nullable|string|exists:countries,code',
+            'bio' => 'nullable|string|max:1000',
+            'password' => 'nullable|string|min:8',
+            'thumbnail_image' => 'nullable|image|max:2048', // 2MB limit
+        ]);
+
+        // 画像の処理
+        if ($request->hasFile('thumbnail_image')) {
+            $path = $request->file('thumbnail_image')->store('thumbnails', 'public');
+            $fan->thumbnail_url = asset('storage/' . $path);
         }
 
-        $request->user()->save();
+        // 基本情報の更新
+        $fan->name = $validated['name'];
+        $fan->email = $validated['email'];
+        $fan->country_code = $validated['country_code'];
+        $fan->bio = $validated['bio'];
 
-        return Redirect::route('profile.edit');
+        // パスワードが入力されている場合のみ更新
+        if ($request->filled('password')) {
+            $fan->password = Hash::make($validated['password']);
+        }
+
+        $fan->save();
+
+        return redirect()->route('fans.dashboard', ['tab' => 'profile'])->with('message', 'Profile updated successfully! ✨');
     }
 
     /**
